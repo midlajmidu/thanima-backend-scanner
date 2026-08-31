@@ -144,11 +144,11 @@ with app.app_context():
 
 # admin credentials
 ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD_HASH = "pbkdf2:sha256:260000$tDWpYXPLMWNWfzYg$b1e0432474be8e7f097b0914c5eb26ce2eb0322b46041d43b3688f4a49b509b1"
+ADMIN_PASSWORD_HASH = "pbkdf2:sha256:260000$2icYnMEyuKf0g3bx$7b2986b75bc182114e9f35db68a4dfa901144ff8d920b3dbc4401da506838df0"
 
 # volunteer credentials
 VOLUNTEER_USERNAME = "volunteer"
-VOLUNTEER_PASSWORD_HASH = "pbkdf2:sha256:260000$7WyQPizvxsjO7FHd$c38f6598b482e8860c9db0138a8f633142a1bcfd6f1692eb01e5ed3208b16ca3"
+VOLUNTEER_PASSWORD_HASH = "pbkdf2:sha256:260000$i2NlB8oXo8UTF8Wi$f4fefce5ad4a619831aec516c18fb1cda4dbd99927adff63b566859d6d932cee"
 
 
 @app.route("/reset/<string:table>")
