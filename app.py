@@ -10,11 +10,26 @@ from datetime import datetime
 from flask_wtf.csrf import CSRFProtect
 
 
-BACKUP_PATH = open("backup_path").read().strip()
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def get_config_val(filename, default):
+    filepath = os.path.join(BASE_DIR, filename)
+    if os.path.exists(filepath):
+        try:
+            val = open(filepath).read().strip()
+            if val:
+                return val
+        except Exception:
+            pass
+    return default
+
+BACKUP_PATH = get_config_val("backup_path", "./")
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = open("secret").read().strip()
-app.config["SQLALCHEMY_DATABASE_URI"] = open("db_url").read().strip()
+app.config["SECRET_KEY"] = get_config_val("secret", "thanima_secret_key_2026")
+app.config["SQLALCHEMY_DATABASE_URI"] = get_config_val("db_url", "sqlite:///thanima.db")
 db = SQLAlchemy(app)
 csrf = CSRFProtect(app)
 # limiter = Limiter(get_remote_address, app=app)
@@ -103,12 +118,22 @@ table_map = {
 log_map = {"entry": EntryLog, "concert": ConcertLog}
 
 
-get_total_counts = lambda: {
-    "sticker": db.session.query(Sticker).count(),
-    "entry": db.session.query(Entry).count(),
-    "sadhya": db.session.query(Sadhya).count(),
-    "concert": db.session.query(Concert).count(),
-}
+def get_total_counts():
+    try:
+        return {
+            "sticker": db.session.query(Sticker).count(),
+            "entry": db.session.query(Entry).count(),
+            "sadhya": db.session.query(Sadhya).count(),
+            "concert": db.session.query(Concert).count(),
+        }
+    except Exception:
+        db.create_all()
+        return {
+            "sticker": db.session.query(Sticker).count(),
+            "entry": db.session.query(Entry).count(),
+            "sadhya": db.session.query(Sadhya).count(),
+            "concert": db.session.query(Concert).count(),
+        }
 
 
 # Create the database and table
@@ -119,11 +144,11 @@ with app.app_context():
 
 # admin credentials
 ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD_HASH = "pbkdf2:sha256:260000$pyJqKiGxx513y4b6$1e40141f424908076a239af573d039e0182d28cd6d6acec2dcee4d26e1b6470b"
+ADMIN_PASSWORD_HASH = "pbkdf2:sha256:260000$tDWpYXPLMWNWfzYg$b1e0432474be8e7f097b0914c5eb26ce2eb0322b46041d43b3688f4a49b509b1"
 
 # volunteer credentials
 VOLUNTEER_USERNAME = "volunteer"
-VOLUNTEER_PASSWORD_HASH = "pbkdf2:sha256:260000$3ilfqNWJEXCD33Zy$c8b1c01b201250c21f2a8b2c827b6ac7d205206e8b54aeff3a9bdfd61d52380e"
+VOLUNTEER_PASSWORD_HASH = "pbkdf2:sha256:260000$7WyQPizvxsjO7FHd$c38f6598b482e8860c9db0138a8f633142a1bcfd6f1692eb01e5ed3208b16ca3"
 
 
 @app.route("/reset/<string:table>")
@@ -380,6 +405,121 @@ def modifications():
     log = db.session.query(ModifyLog).all()
 
     return render_template("modifications.html", log=log)
+
+
+import tempfile
+
+def process_registration_file(filepath):
+    table_names = ["entry", "concert", "sadhya", "sticker"]
+    target_header = "Registration No."
+    
+    if filepath.endswith(".xlsx") or filepath.endswith(".xls"):
+        import pandas as pd
+        df = pd.read_excel(filepath)
+        headers = list(df.columns)
+        if target_header not in headers:
+            raise ValueError(f"Header '{target_header}' not found in file. Available columns: {headers}")
+        header_index = headers.index(target_header)
+        rows = df.astype(str).values.tolist()
+    else:
+        import csv
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as file:
+            csv_reader = csv.reader(file)
+            headers = next(csv_reader)
+            if target_header not in headers:
+                raise ValueError(f"Header '{target_header}' not found in file. Available columns: {headers}")
+            header_index = headers.index(target_header)
+            rows = list(csv_reader)
+
+    db.create_all()
+    raw_conn = db.engine.raw_connection()
+    cursor = raw_conn.cursor()
+
+    for table_name in table_names:
+        if table_name in ["entry", "concert"]:
+            cursor.execute(
+                f"CREATE TABLE IF NOT EXISTS {table_name} (\n"
+                "registration_number CHAR(9) NOT NULL PRIMARY KEY,\n"
+                "is_in BOOLEAN DEFAULT FALSE,\n"
+                "last_scanned DATETIME);"
+            )
+            cursor.execute(
+                f"CREATE TABLE IF NOT EXISTS {table_name}_log (\n"
+                "registration_number CHAR(9),\n"
+                "is_entry BOOLEAN,\n"
+                "time DATETIME,\n"
+                "PRIMARY KEY(registration_number, time));"
+            )
+        elif table_name in ["sadhya", "sticker"]:
+            cursor.execute(
+                f"CREATE TABLE IF NOT EXISTS {table_name} (\n"
+                "registration_number CHAR(9) NOT NULL PRIMARY KEY,\n"
+                "is_in BOOLEAN DEFAULT FALSE,\n"
+                "entry_time DATETIME);"
+            )
+
+    added_count = 0
+    processed_regs = set()
+    for row in rows:
+        if len(row) <= header_index:
+            continue
+        reg_no = str(row[header_index]).strip().upper()
+        if not reg_no or reg_no == "NAN" or reg_no in processed_regs:
+            continue
+        processed_regs.add(reg_no)
+        
+        for table_name in table_names:
+            try:
+                cursor.execute(
+                    f"INSERT OR IGNORE INTO {table_name} (registration_number) VALUES ('{reg_no}')"
+                )
+            except Exception as e:
+                print(f"Error inserting {reg_no} in {table_name}: {e}")
+        added_count += 1
+
+    raw_conn.commit()
+    raw_conn.close()
+    return added_count
+
+
+@app.route("/add", methods=["GET", "POST"])
+def add():
+    if "admin" not in session:
+        flash("Admin access required to upload registration lists", "error")
+        return redirect(url_for("index"))
+
+    if request.method == "POST":
+        if "file" not in request.files:
+            flash("No file selected", "error")
+            return redirect(url_for("add"))
+
+        file = request.files["file"]
+        if file.filename == "":
+            flash("No file selected", "error")
+            return redirect(url_for("add"))
+
+        if not (file.filename.endswith(".csv") or file.filename.endswith(".xlsx") or file.filename.endswith(".xls")):
+            flash("Invalid file format. Please upload a .csv or .xlsx Excel file.", "error")
+            return redirect(url_for("add"))
+
+        try:
+            filename = file.filename
+            ext = os.path.splitext(filename)[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                file.save(tmp.name)
+                tmp_path = tmp.name
+
+            count = process_registration_file(tmp_path)
+            os.remove(tmp_path)
+
+            global TOTAL_COUNTS
+            TOTAL_COUNTS = get_total_counts()
+
+            flash(f"Successfully processed '{filename}'! Imported/synced {count} registration records.", "success")
+        except Exception as e:
+            flash(f"Error processing file: {str(e)}", "error")
+
+    return render_template("add.html")
 
 
 @app.route("/login", methods=["GET", "POST"])

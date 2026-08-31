@@ -3,3 +3,8 @@ secret
 db_url
 *.db
 *.table
+.venv/
+__pycache__/
+.DS_Store
+*.xlsx
+*.csv
