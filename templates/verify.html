@@ -3,12 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scanner</title>
+    <title>Thanima Scanner - Verify</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/png">
     <link rel="stylesheet"
           type="text/css"
           href="{{ url_for('static', filename='style.css') }}">
   </head>
   <body>
+    <script>
+      if (window.location.search.includes('table=')) {
+        document.write('<style>#loading { display: none !important; opacity: 0 !important; visibility: hidden !important; }</style>');
+      }
+    </script>
+    <div class="sideBars"></div>
+    <div id="loading">
+      <img class="preloader-img preloader-theyyam" src="{{ url_for('static', filename='images/theyyam face.png') }}" alt="Theyyam">
+      <img class="preloader-img preloader-kathakali" src="{{ url_for('static', filename='images/Kathakali face.png') }}" alt="Kathakali">
+      <div class="loader-flex">
+        <div class="thanima-loader" id="loader">
+          <img src="{{ url_for('static', filename='images/_350F17__4_-removebg-preview.png') }}" alt="Thanima Logo" class="thanima-logo">
+          <div class="loading-overlay"></div>
+        </div>
+      </div>
+    </div>
     <div class="header">
       <div class="logo_div">
         <img class="thanima_logo"
@@ -35,7 +53,7 @@
       </div>
     </div>
     <h3>THANIMA - 2026</h3>
-    <h1>event registration verification</h1>
+    <h1>event registration verification{% if table %} - {{ table }}{% endif %}</h1>
     <div class="container">
       {% for table_name in tables %}
         <a href="?table={{ table_name }}"
@@ -63,5 +81,32 @@
       {% endwith %}
     </div>
     <div class="reg_no">{{ reg_no }}</div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        if (window.location.search.includes('table=')) return;
+        setTimeout(function () {
+          var l = document.getElementById('loading');
+          if (l) l.classList.add('preloader-in');
+        }, 100);
+      });
+
+      window.addEventListener("load", function () {
+        const loading = document.getElementById("loading");
+        if (window.location.search.includes('table=')) {
+          if (loading) loading.style.display = "none";
+          return;
+        }
+        setTimeout(function () {
+          if (loading) {
+            loading.classList.add("preloader-out");
+            loading.style.opacity = "0";
+            loading.style.transition = "opacity 0.7s ease-out";
+            setTimeout(function () {
+              loading.style.display = "none";
+            }, 700);
+          }
+        }, 400);
+      });
+    </script>
   </body>
 </html>

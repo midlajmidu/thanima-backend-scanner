@@ -30,9 +30,21 @@ BACKUP_PATH = get_config_val("backup_path", "./")
 app = Flask(__name__)
 app.config["SECRET_KEY"] = get_config_val("secret", "thanima_secret_key_2026")
 app.config["SQLALCHEMY_DATABASE_URI"] = get_config_val("db_url", "sqlite:///thanima.db")
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"connect_args": {"timeout": 30}}
 db = SQLAlchemy(app)
 csrf = CSRFProtect(app)
 # limiter = Limiter(get_remote_address, app=app)
+
+@sqlalchemy.event.listens_for(sqlalchemy.engine.Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    try:
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL;")
+        cursor.execute("PRAGMA busy_timeout=30000;")
+        cursor.close()
+    except Exception:
+        pass
+
 
 
 class Sadhya(db.Model):
@@ -97,6 +109,12 @@ class ConcertLog(db.Model):
     # )
 
 
+class Chendamelam(db.Model):
+    registration_number = db.Column(db.CHAR(9), primary_key=True)
+    is_in = db.Column(db.Boolean, default=False)
+    entry_time = db.Column(db.DateTime, nullable=True)
+
+
 class ModifyLog(db.Model):
     __tablename__ = "modify_log"
     registration_number = db.Column(db.CHAR(9), primary_key=True)
@@ -105,11 +123,13 @@ class ModifyLog(db.Model):
     entry = db.Column(db.Boolean, default=False)
     sadhya = db.Column(db.Boolean, default=False)
     concert = db.Column(db.Boolean, default=False)
+    chendamelam = db.Column(db.Boolean, default=False)
     # table = db.Column(db.VARCHAR(10), primary_key=True)
     when_modified = db.Column(db.DateTime, nullable=True, primary_key=True)
 
 
 table_map = {
+    "chendamelam": Chendamelam,
     "sticker": Sticker,
     "entry": Entry,
     "sadhya": Sadhya,
@@ -125,6 +145,7 @@ def get_total_counts():
             "entry": db.session.query(Entry).count(),
             "sadhya": db.session.query(Sadhya).count(),
             "concert": db.session.query(Concert).count(),
+            "chendamelam": db.session.query(Chendamelam).count(),
         }
     except Exception:
         db.create_all()
@@ -133,12 +154,20 @@ def get_total_counts():
             "entry": db.session.query(Entry).count(),
             "sadhya": db.session.query(Sadhya).count(),
             "concert": db.session.query(Concert).count(),
+            "chendamelam": db.session.query(Chendamelam).count(),
         }
 
 
 # Create the database and table
 with app.app_context():
     db.create_all()
+    try:
+        raw_conn = db.engine.raw_connection()
+        cursor = raw_conn.cursor()
+        cursor.execute("ALTER TABLE modify_log ADD COLUMN chendamelam BOOLEAN DEFAULT 0")
+        raw_conn.commit()
+    except Exception:
+        pass
     TOTAL_COUNTS = get_total_counts()
 
 
@@ -234,7 +263,7 @@ def index():
         if not student:
             flash("Not registered", "error")
         else:
-            if table in ["sadhya", "sticker"]:
+            if table in ["sadhya", "sticker", "chendamelam"]:
                 if student.is_in:
                     flash(
                         f'Already scanned at {student.entry_time.strftime("%H:%M:%S")}',
@@ -308,7 +337,7 @@ def verify():
         else:
             flash("Registered", "success")
 
-            if table in ["sadhya", "sticker"]:
+            if table in ["sadhya", "sticker", "chendamelam"]:
                 if student.is_in:
                     flash(
                         f'Already scanned at {student.entry_time.strftime("%H:%M:%S")}',
@@ -381,6 +410,7 @@ def edit():
                 modify_record.entry,
                 modify_record.sadhya,
                 modify_record.concert,
+                modify_record.chendamelam,
             )
         ):
             db.session.add(modify_record)
@@ -398,6 +428,7 @@ def edit():
 
 
 @app.route("/modifications", methods=["GET", "POST"])
+@app.route("/modification", methods=["GET", "POST"])
 def modifications():
     if "logged_in" not in session:
         return redirect(url_for("login"))
@@ -410,7 +441,7 @@ def modifications():
 import tempfile
 
 def process_registration_file(filepath):
-    table_names = ["entry", "concert", "sadhya", "sticker"]
+    table_names = ["entry", "concert", "sadhya", "sticker", "chendamelam"]
     target_header = "Registration No."
     
     if filepath.endswith(".xlsx") or filepath.endswith(".xls"):
@@ -450,7 +481,7 @@ def process_registration_file(filepath):
                 "time DATETIME,\n"
                 "PRIMARY KEY(registration_number, time));"
             )
-        elif table_name in ["sadhya", "sticker"]:
+        elif table_name in ["sadhya", "sticker", "chendamelam"]:
             cursor.execute(
                 f"CREATE TABLE IF NOT EXISTS {table_name} (\n"
                 "registration_number CHAR(9) NOT NULL PRIMARY KEY,\n"
@@ -554,4 +585,8 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(get_config_val("port", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True, threaded=True)
+
+
+

@@ -4,7 +4,7 @@ from sys import argv
 
 
 def csv_to_sqlite(csv_file, db_file):
-    table_names = ["entry", "concert", "sadhya", "sticker"]
+    table_names = ["entry", "concert", "sadhya", "sticker", "chendamelam"]
 
     # Connect to SQLite database
     conn = sqlite3.connect(db_file)
@@ -42,7 +42,7 @@ def csv_to_sqlite(csv_file, db_file):
                 "time DATETIME,\n"
                 "PRIMARY KEY(registration_number, time));"
             )
-        elif table_name in ["sadhya", "sticker"]:
+        elif table_name in ["sadhya", "sticker", "chendamelam"]:
             cursor.execute(
                 f"CREATE TABLE IF NOT EXISTS {table_name} (\n"
                 "registration_number CHAR(9) NOT NULL PRIMARY KEY,\n"

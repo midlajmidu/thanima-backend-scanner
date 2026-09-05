@@ -2,6 +2,8 @@ backup_path
 secret
 db_url
 *.db
+*.db-shm
+*.db-wal
 *.table
 .venv/
 __pycache__/
