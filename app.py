@@ -177,7 +177,8 @@ ADMIN_PASSWORD_HASH = "pbkdf2:sha256:260000$2icYnMEyuKf0g3bx$7b2986b75bc182114e9
 
 # volunteer credentials
 VOLUNTEER_USERNAME = "volunteer"
-VOLUNTEER_PASSWORD_HASH = "pbkdf2:sha256:260000$i2NlB8oXo8UTF8Wi$f4fefce5ad4a619831aec516c18fb1cda4dbd99927adff63b566859d6d932cee"
+VOLUNTEER_PASSWORD_HASH = "pbkdf2:sha256:260000$zmAMt0yimYwQG3Cn$405619145cd24b8bb9767b20a785fea1b38f0dcfd0c0ef634cccdf4224b37688"
+
 
 
 @app.route("/reset/<string:table>")
@@ -224,16 +225,13 @@ def get_count(table):
 
     table_obj = table_map[table]
     in_count = db.session.query(table_obj).filter(table_obj.is_in == True).count()
-    # if table == "sadhya" and in_count and in_count % 300 == 0:
-    #     flash(
-    #         "The 300th person has entered. In-count display has been reset to zero.",
-    #         "error",
-    #     )
+    total_count = db.session.query(table_obj).count()
     return {
         "in_count": in_count,
-        "out_count": TOTAL_COUNTS[table] - in_count,
+        "out_count": max(0, total_count - in_count),
         "error": "",
     }
+
 
 
 def get_log(reg_number, table):
