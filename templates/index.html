@@ -1,140 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Thanima Scanner</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/x-icon">
-    <link rel="icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/png">
-    <link rel="stylesheet"
-          type="text/css"
-          href="{{ url_for('static', filename='style.css') }}">
-  </head>
-  <body>
-    <script>
-      if (window.location.search.includes('table=')) {
-        document.write('<style>#loading { display: none !important; opacity: 0 !important; visibility: hidden !important; }</style>');
-      }
-    </script>
-    <div class="sideBars"></div>
-    <div id="loading">
-      <img class="preloader-img preloader-theyyam" src="{{ url_for('static', filename='images/theyyam face.png') }}" alt="Theyyam">
-      <img class="preloader-img preloader-kathakali" src="{{ url_for('static', filename='images/Kathakali face.png') }}" alt="Kathakali">
-      <div class="loader-flex">
-        <div class="thanima-loader" id="loader">
-          <img src="{{ url_for('static', filename='images/_350F17__4_-removebg-preview.png') }}" alt="Thanima Logo" class="thanima-logo">
-          <div class="loading-overlay"></div>
-        </div>
-      </div>
-    </div>
-    <div class="header">
-      <div class="logo_div">
-        <img class="thanima_logo"
-             src="{{ url_for('static', filename='images/logoOnly.png') }}"
-             alt="">
-        {% if session["admin"] %}<div class="admin">Admin</div>{% endif %}
-      </div>
-      <div>
-        <a href='{{ url_for("index") }}' class="section_button">Home</a>
-      </div>
-      <div>
-        <a href='{{ url_for("verify") }}' class="section_button">Verify</a>
-      </div>
-      {% if session["admin"] %}
-        <div>
-          <a href='{{ url_for("edit") }}' class="section_button">Edit</a>
-        </div>
-      {% endif %}
-      <div>
-        <a href='{{ url_for("modifications") }}' class="section_button">Modifications</a>
-      </div>
-      <div>
-        <a href='{{ url_for("logout") }}' class="logout">Logout</a>
-      </div>
-    </div>
-    <h3>THANIMA - 2026</h3>
-    <h1>event entry{% if table %} - {{ table }}{% endif %}</h1>
-    <div class="container">
-      {% for table_name in tables %}
-        <a href="?table={{ table_name }}"
-           class="{{ 'active' if table_name==table else '' }}">{{ table_name }}</a>
-      {% endfor %}
-    </div>
-    {% if table %}
-      <form method="post" id="verify">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        <input type="hidden" name="table" value="{{ table }}" />
-        <input class="regInput"
-               type="text"
-               name="registration_number"
-               placeholder="Registration No."
-               required
-               autofocus />
-        <input class="verifyBtn " type="submit" value="Enter" />
-      </form>
-    {% endif %}
-    <div class="flash-container">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
-        {% endif %}
-      {% endwith %}
-    </div>
-    <div class="reg_no">{{ reg_no }}</div>
-    <div class="bottom_container">
-      <!-- <div id="in_count">In: {{ in_count%300 if table=='sadhya' else in_count }}</div> -->
-      <div id="in_count">In: {{ in_count }}</div>
-      <div id="log">
-        {% for record in log %}
-          <div class="{{ 'entry_record' if record.is_entry else 'exit_record' }}">{{ record.time }}</div>
-        {% endfor %}
-      </div>
-      <div id="out_count">Out: {{ out_count }}</div>
-    </div>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanima Scanner</title>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/x-icon">
+  <link rel="icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/png">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      if (window.location.search.includes('table=')) return;
-      setTimeout(function () {
-        var l = document.getElementById('loading');
-        if (l) l.classList.add('preloader-in');
-      }, 100);
-    });
-
-    window.addEventListener("load", function () {
-      const loading = document.getElementById("loading");
-      if (window.location.search.includes('table=')) {
-        if (loading) loading.style.display = "none";
-        return;
-      }
-      setTimeout(function () {
-        if (loading) {
-          loading.classList.add("preloader-out");
-          loading.style.opacity = "0";
-          loading.style.transition = "opacity 0.7s ease-out";
-          setTimeout(function () {
-            loading.style.display = "none";
-          }, 700);
-        }
-      }, 400);
-    });
-
-    function updateCount() {
-      let form = document.getElementById("verify");
-      if (!form) return;
-
-      let table = form.children[1].value;
-      let inCountViewer = document.getElementById('in_count');
-      let outCountViewer = document.getElementById('out_count');
-
-      fetch("/getCount/" + table)
-        .then((response) => response.json())
-        .then((json) => {
-          inCountViewer.innerHTML = "In: " + json['in_count'];
-          outCountViewer.innerHTML = "Out: " + json['out_count'];
-        })
+    if (window.location.search.includes('table=')) {
+      document.write('<style>#loading { display: none !important; opacity: 0 !important; visibility: hidden !important; }</style>');
     }
-
-    var intervalId = window.setInterval(updateCount, 3000);
   </script>
+  <div class="sideBars"></div>
+  <div id="loading">
+    <img class="preloader-img preloader-theyyam" src="{{ url_for('static', filename='images/theyyam face.png') }}"
+      alt="Theyyam">
+    <img class="preloader-img preloader-kathakali" src="{{ url_for('static', filename='images/Kathakali face.png') }}"
+      alt="Kathakali">
+    <div class="loader-flex">
+      <div class="thanima-loader" id="loader">
+        <img src="{{ url_for('static', filename='images/_350F17__4_-removebg-preview.png') }}" alt="Thanima Logo"
+          class="thanima-logo">
+        <div class="loading-overlay"></div>
+      </div>
+    </div>
+  </div>
+  <div class="header">
+    <div class="logo_div">
+      <img class="thanima_logo" src="{{ url_for('static', filename='images/logoOnly.png') }}" alt="">
+      {% if session["admin"] %}<div class="admin">Admin</div>{% endif %}
+    </div>
+    <div>
+      <a href='{{ url_for("index") }}' class="section_button">Home</a>
+    </div>
+    <div>
+      <a href='{{ url_for("verify") }}' class="section_button">Verify</a>
+    </div>
+    {% if session["admin"] %}
+    <div>
+      <a href='{{ url_for("edit") }}' class="section_button">Edit</a>
+    </div>
+    <div>
+      <a href='{{ url_for("modifications") }}' class="section_button">Modifications</a>
+    </div>
+    {% endif %}
+    <div>
+      <a href='{{ url_for("logout") }}' class="logout">Logout</a>
+    </div>
+  </div>
+  <h3>THANIMA - 2026</h3>
+  <h1>event entry{% if table %} - {{ table }}{% endif %}</h1>
+  <div class="container">
+    {% for table_name in tables %}
+    <a href="?table={{ table_name|urlencode }}" class="{{ 'active' if table_name==table else '' }}">{{ table_name }}</a>
+    {% endfor %}
+  </div>
+  {% if table %}
+  <form method="post" id="verify">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <input type="hidden" name="table" value="{{ table }}" />
+    <input class="regInput" type="text" name="registration_number" placeholder="Registration No." required autofocus />
+    <input class="verifyBtn " type="submit" value="Enter" />
+  </form>
+  {% endif %}
+  <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+    {% endif %}
+    {% endwith %}
+  </div>
+  <div class="reg_no">{{ reg_no }}</div>
+
+  <div id="log">
+    {% for record in log %}
+      <div class="{{ 'entry_record' if record.is_entry else 'exit_record' }}">
+        <span class="record_status">{{ 'Entered' if record.is_entry else 'Left' }}</span>
+        <span class="record_time">{{ record.time }}</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="left_counts">
+    <div id="in_count">In: {{ in_count }}</div>
+    {% if table == 'sticker & entry' %}
+      <div id="sticker_count">Sticker: {{ sticker_count }}</div>
+    {% endif %}
+  </div>
+  <div id="out_count">Out: {{ out_count }}</div>
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (window.location.search.includes('table=')) return;
+    setTimeout(function () {
+      var l = document.getElementById('loading');
+      if (l) l.classList.add('preloader-in');
+    }, 100);
+  });
+
+  window.addEventListener("load", function () {
+    const loading = document.getElementById("loading");
+    if (window.location.search.includes('table=')) {
+      if (loading) loading.style.display = "none";
+      return;
+    }
+    setTimeout(function () {
+      if (loading) {
+        loading.classList.add("preloader-out");
+        loading.style.opacity = "0";
+        loading.style.transition = "opacity 0.7s ease-out";
+        setTimeout(function () {
+          loading.style.display = "none";
+        }, 700);
+      }
+    }, 400);
+  });
+
+  function updateCount() {
+    let tableInput = document.querySelector('input[name="table"]');
+    if (!tableInput || !tableInput.value) return;
+
+    let table = tableInput.value;
+    let inCountViewer = document.getElementById('in_count');
+    let outCountViewer = document.getElementById('out_count');
+    let stickerCountViewer = document.getElementById('sticker_count');
+
+    fetch("/getCount/" + encodeURIComponent(table))
+      .then((response) => response.json())
+      .then((json) => {
+        if (inCountViewer && json['in_count'] !== undefined) inCountViewer.innerHTML = "In: " + json['in_count'];
+        if (outCountViewer && json['out_count'] !== undefined) outCountViewer.innerHTML = "Out: " + json['out_count'];
+        if (stickerCountViewer && json['sticker_count'] !== undefined) stickerCountViewer.innerHTML = "Sticker: " + json['sticker_count'];
+      })
+  }
+
+  var intervalId = window.setInterval(updateCount, 3000);
+</script>
+
 </html>

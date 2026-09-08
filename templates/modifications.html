@@ -39,10 +39,10 @@
                 <div>
                     <a href='{{ url_for("edit") }}' class="section_button">Edit</a>
                 </div>
+                <div>
+                    <a href='{{ url_for("modifications") }}' class="section_button">Modifications</a>
+                </div>
             {% endif %}
-            <div>
-                <a href='{{ url_for("modifications") }}' class="section_button">Modifications</a>
-            </div>
             <div>
                 <a href='{{ url_for("logout") }}' class="logout">Logout</a>
             </div>
@@ -57,11 +57,9 @@
                 <hr>
                 {{ record.action }}
                 <hr>
-                {% if record.sticker %}<div class="table">sticker,</div>{% endif %}
-                {% if record.entry %}<div class="table">entry,</div>{% endif %}
+                {% if record.sticker or record.entry %}<div class="table">sticker & entry,</div>{% endif %}
                 {% if record.sadhya %}<div class="table">sadhya,</div>{% endif %}
-                {% if record.concert %}<div class="table">concert,</div>{% endif %}
-                {% if record.chendamelam %}<div class="table">chendamelam</div>{% endif %}
+                {% if record.concert %}<div class="table">concert</div>{% endif %}
             </div>
         {% endfor %}
         <script>

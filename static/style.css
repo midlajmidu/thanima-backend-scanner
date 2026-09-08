@@ -103,14 +103,17 @@ body::before {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   #loading.preloader-in .preloader-img,
   #loading.preloader-out .preloader-img {
     transition: none;
   }
+
   .preloader-theyyam {
     transform: translateX(-3vw) translateY(-50%);
     opacity: 1;
   }
+
   .preloader-kathakali {
     transform: translateX(0) translateY(-50%);
     opacity: 1;
@@ -149,22 +152,23 @@ body::before {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(0, 0, 0, 0.8),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(0, 0, 0, 0.8),
+      transparent);
   animation: loadingSweep 2s ease-in-out infinite;
   z-index: 2;
   border-radius: 50%;
 }
 
 @keyframes logoPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.05);
     opacity: 0.9;
@@ -172,9 +176,17 @@ body::before {
 }
 
 @keyframes loadingSweep {
-  0% { left: -100%; }
-  50% { left: 0%; }
-  100% { left: 100%; }
+  0% {
+    left: -100%;
+  }
+
+  50% {
+    left: 0%;
+  }
+
+  100% {
+    left: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -182,6 +194,7 @@ body::before {
     width: 100px;
     height: 100px;
   }
+
   .thanima-logo {
     width: 80px;
     height: 80px;
@@ -193,16 +206,19 @@ body::before {
     width: 80px;
     height: 80px;
   }
+
   .thanima-logo {
     width: 60px;
     height: 60px;
   }
 }
+
 input[type="text"] {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
 }
+
 input[type="submit"] {
   background-color: #4caf50;
   color: white;
@@ -210,6 +226,7 @@ input[type="submit"] {
   border: none;
   cursor: pointer;
 }
+
 .flash-container {
   display: flex;
   align-items: center;
@@ -218,12 +235,14 @@ input[type="submit"] {
   margin-bottom: 10px;
   margin: 10px auto;
 }
+
 .flash {
   display: flex;
   padding: 10px;
   margin: 10px auto;
   border-radius: 4px;
 }
+
 .flash.error {
   display: flex;
   background-color: #ffebee;
@@ -232,6 +251,7 @@ input[type="submit"] {
   margin: 10px auto;
   padding: 15px 5vw;
 }
+
 .flash.success {
   display: flex;
   background-color: #e8f5e9;
@@ -247,6 +267,7 @@ input[type="password"] {
   padding: 10px;
   margin: 10px 0;
 }
+
 input[type="submit"] {
   background-color: #4caf50;
   margin-top: 20px;
@@ -255,17 +276,20 @@ input[type="submit"] {
   border: none;
   cursor: pointer;
 }
+
 .flash {
   padding: 10px;
   margin: 10px 0;
   background-color: #f44336;
   color: white;
 }
+
 h1 {
   color: rgb(230, 230, 230);
   text-align: center;
   text-transform: capitalize;
 }
+
 h3 {
   /* color: rgb(78, 0, 0); */
   color: #ffecd1;
@@ -273,11 +297,13 @@ h3 {
   letter-spacing: 4px;
   font-size: 2rem;
 }
+
 .container {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
 }
+
 .container a {
   /* color: white; */
   color: #000;
@@ -291,18 +317,21 @@ h3 {
   opacity: 0.9;
   letter-spacing: 2px;
 }
+
 .container a:hover {
   background: white;
   color: rgb(78, 0, 0);
   font-weight: 500;
   opacity: 1;
 }
+
 .container .active {
   background: white;
   color: rgb(78, 0, 0);
   font-weight: 500;
   opacity: 1;
 }
+
 .header {
   display: flex;
   /* height: 5vh; */
@@ -315,19 +344,23 @@ h3 {
   padding-bottom: 8vh;
   padding-top: 2vh;
 }
+
 .logo_div {
   display: flex;
   flex-direction: row;
   /* justify-content: center; */
   align-items: center;
 }
+
 .admin {
   font-size: x-large;
 }
+
 .thanima_logo {
   height: 10vh;
   padding: 1vh 4vw;
 }
+
 .section_button {
   float: right;
   /* background: rgb(78, 0, 0); */
@@ -342,11 +375,13 @@ h3 {
   transition: 0.2s;
   margin: 0 4vw;
 }
+
 .section_button:hover {
   opacity: 1;
   transform: scale(1.06);
   padding: 8px 30px;
 }
+
 .logout {
   float: right;
   background: rgb(78, 0, 0);
@@ -361,15 +396,18 @@ h3 {
   transition: 0.2s opacity;
   margin: 0 4vw;
 }
+
 .logout:hover {
   opacity: 1;
 }
+
 form {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 }
+
 form .regInput {
   border-radius: 50px;
   font-size: 1.5rem;
@@ -382,6 +420,7 @@ form .regInput {
   color: #000;
   letter-spacing: 2px;
 }
+
 form .verifyBtn {
   border-radius: 50px;
   font-size: 1.1rem;
@@ -390,30 +429,43 @@ form .verifyBtn {
   transition: 0.2s padding;
   z-index: 1000;
 }
+
 .verifyBtn:hover {
   opacity: 1;
   padding-right: 30px;
   padding-left: 30px;
 }
-#in_count,
+
+.left_counts {
+  position: fixed;
+  bottom: 4vh;
+  left: 4vw;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 100;
+}
+
 #out_count {
+  position: fixed;
+  bottom: 4vh;
+  right: 4vw;
+  z-index: 100;
+}
+
+#in_count,
+#out_count,
+#sticker_count {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 15vw;
-  margin: auto;
+  min-width: 130px;
   font-size: 2.3rem;
   padding: 10px 10px;
   border-radius: 5px;
   background: #ffecd1;
-  /* color: white; */
   color: #000;
-}
-#in_count {
-  justify-self: flex-start;
-}
-#out_count {
-  justify-self: flex-end;
 }
 
 .thanima_logo2 {
@@ -424,9 +476,11 @@ form .verifyBtn {
   justify-content: center;
   margin-bottom: 12vh;
 }
+
 h2 {
   text-align: center;
 }
+
 .loginForm {
   display: flex;
   justify-content: center;
@@ -434,12 +488,14 @@ h2 {
   width: 35vw;
   margin: 0 auto;
 }
+
 .loginForm input {
   border-radius: 50px;
   font-size: 1.2rem;
   text-align: center;
   border: none;
 }
+
 .login {
   float: right;
   background: rgb(78, 0, 0);
@@ -453,108 +509,140 @@ h2 {
   transition: 0.2s padding;
   margin: 3vh 4vw;
 }
+
 .login:hover {
   opacity: 1;
   padding-right: 70px;
   padding-left: 70px;
 }
+
 #log {
   display: flex;
   flex-direction: column;
-  justify-items: center;
   align-items: center;
-  overflow: scroll;
-  width: 60vw;
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  overflow-y: auto;
+  width: 280px;
+  max-width: 90vw;
+  max-height: 180px;
+  margin: 15px auto 25px auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
+
 #log::-webkit-scrollbar {
   display: none;
 }
-.exit_record {
+
+.exit_record,
+.entry_record {
   display: flex;
-  justify-self: center;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 3px 0;
+  padding: 6px 14px;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 0.95rem;
+}
+
+.exit_record {
   background-color: #ffebee;
   color: #c62828;
   border: 0.5px solid #ef9a9a;
-  margin: 5px auto;
-  padding: 5px 5vw;
 }
+
 .entry_record {
-  display: flex;
-  justify-self: center;
   background-color: #e8f5e9;
   color: #2e7d32;
   border: 0.5px solid #a5d6a7;
-  margin: 5px auto;
-  padding: 5px 5vw;
 }
-.bottom_container {
-  display: flex;
-  position: absolute;
-  bottom: 5vh;
-  right: 5vw;
-  width: 90vw;
-  height: 25vh;
-  justify-content: space-between;
+
+.record_status {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
 }
-.check_group{
+
+.record_time {
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.check_group {
   display: flex;
   flex-direction: row;
 }
-.check_group input{
+
+.check_group input {
   font-size: 3rem;
 }
-.check_group label{
+
+.check_group label {
   font-size: 1.6rem;
   padding: 0 5px;
   margin: 0 5px;
-  
+
 }
-.chec_group{
+
+.chec_group {
   display: flex;
   flex-direction: column;
 }
-.chec_group input{
+
+.chec_group input {
   font-size: 3rem;
 }
-.chec_group label{
+
+.chec_group label {
   font-size: 1.6rem;
   padding: 0 5px;
   margin: 0 5px;
-  
+
 }
+
 input[type="checkbox"] {
-  width: 20px; /* Adjust as needed */
-  height: 20px; /* Adjust as needed */
+  width: 20px;
+  /* Adjust as needed */
+  height: 20px;
+  /* Adjust as needed */
 }
+
 input[type="radio"] {
-  width: 20px; /* Adjust as needed */
-  height: 31px; /* Adjust as needed */
+  width: 20px;
+  /* Adjust as needed */
+  height: 31px;
+  /* Adjust as needed */
 }
+
 .reg_no {
   display: grid;
   justify-content: center;
   font-weight: 800;
   font-size: large
 }
+
 .success_response {
   display: grid;
   justify-content: center;
   font-weight: 800;
   font-size: large
 }
+
 .failure_response {
   display: grid;
   justify-content: center;
   font-weight: 800;
   font-size: large
 }
+
 .modify_record {
   display: flex;
   flex-direction: row;
 }
-.modify_record{
+
+.modify_record {
   text-align: center;
   background: #ffecd1df;
   color: #000;
@@ -562,12 +650,15 @@ input[type="radio"] {
   padding: 4px 20px;
   border-radius: 50px;
 }
-.add{
+
+.add {
   background: lightgreen;
 }
-.remove{
+
+.remove {
   background: lightcoral;
 }
+
 .fileInput {
   border-radius: 8px;
   font-size: 1rem;
@@ -582,10 +673,12 @@ input[type="radio"] {
   text-align: center;
   cursor: pointer;
 }
+
 .fileInput:hover {
   border-color: #ffecd1;
   background: rgba(0, 0, 0, 0.6);
 }
+
 .upload-card {
   display: flex;
   flex-direction: column;

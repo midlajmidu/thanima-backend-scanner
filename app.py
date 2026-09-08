@@ -128,14 +128,17 @@ class ModifyLog(db.Model):
     when_modified = db.Column(db.DateTime, nullable=True, primary_key=True)
 
 
+FRONTEND_TABLES = ["sticker & entry", "sadhya", "concert"]
+
 table_map = {
+    "sticker & entry": Entry,
     "chendamelam": Chendamelam,
     "sticker": Sticker,
     "entry": Entry,
     "sadhya": Sadhya,
     "concert": Concert,
 }
-log_map = {"entry": EntryLog, "concert": ConcertLog}
+log_map = {"sticker & entry": EntryLog, "entry": EntryLog, "concert": ConcertLog}
 
 
 def get_total_counts():
@@ -181,11 +184,21 @@ VOLUNTEER_PASSWORD_HASH = "pbkdf2:sha256:260000$zmAMt0yimYwQG3Cn$405619145cd24b8
 
 
 
+def normalize_table_name(table):
+    if not table:
+        return None
+    t = table.strip()
+    if t in ["sticker", "sticker ", "sticker & entry", "sticker_entry"]:
+        return "sticker & entry"
+    return t
+
+
 @app.route("/reset/<string:table>")
 def reset(table):
     if "admin" not in session:
         return {"error": "not an admin"}, 401
 
+    table = normalize_table_name(table)
     if not table:
         return {"error": "no table provided"}, 400
 
@@ -217,11 +230,23 @@ def get_count(table):
     if "logged_in" not in session:
         return {"count": "", "error": "not logged in"}
 
+    table = normalize_table_name(table)
     if not table:
         return {"count": "", "error": "no table provided"}
 
     if table not in table_map:
         return {"count": "", "error": "invalid table"}
+
+    if table == "sticker & entry":
+        entry_in = db.session.query(Entry).filter(Entry.is_in == True).count()
+        entry_total = db.session.query(Entry).count()
+        sticker_count = db.session.query(Sticker).filter(Sticker.is_in == True).count()
+        return {
+            "in_count": entry_in,
+            "out_count": max(0, entry_total - entry_in),
+            "sticker_count": sticker_count,
+            "error": "",
+        }
 
     table_obj = table_map[table]
     in_count = db.session.query(table_obj).filter(table_obj.is_in == True).count()
@@ -233,9 +258,11 @@ def get_count(table):
     }
 
 
-
 def get_log(reg_number, table):
-    table_obj = log_map[table]
+    table = normalize_table_name(table) or ""
+    table_obj = log_map.get(table)
+    if not table_obj:
+        return []
     return (
         db.session.query(table_obj)
         .filter(table_obj.registration_number == reg_number)
@@ -250,66 +277,110 @@ def index():
         return redirect(url_for("login"))
 
     log = []
-    table = request.args.get("table", None)
+    table = normalize_table_name(request.args.get("table", None))
     reg_number = ""
 
     if request.method == "POST":
         reg_number = request.form["registration_number"].strip().upper()
-        table_obj = table_map[table]
-        student = table_obj.query.filter_by(registration_number=reg_number).first()
 
-        if not student:
-            flash("Not registered", "error")
-        else:
-            if table in ["sadhya", "sticker", "chendamelam"]:
-                if student.is_in:
-                    flash(
-                        f'Already scanned at {student.entry_time.strftime("%H:%M:%S")}',
-                        "error",
-                    )
-                else:
-                    student.is_in = True
-                    student.entry_time = datetime.now()
-                    db.session.commit()
-                    flash("Successfully scanned.", "success")
+        if table == "sticker & entry":
+            entry_student = Entry.query.filter_by(registration_number=reg_number).first()
+            sticker_student = Sticker.query.filter_by(registration_number=reg_number).first()
+
+            if not entry_student and not sticker_student:
+                flash("Not registered", "error")
             else:
-                student.is_in = not student.is_in
-                record = log_map[table](
-                    registration_number=reg_number, time=datetime.now()
-                )
+                sticker_just_added = False
+                if sticker_student:
+                    if not sticker_student.is_in:
+                        sticker_student.is_in = True
+                        sticker_student.entry_time = datetime.now()
+                        sticker_just_added = True
 
-                if not student.is_in:
-                    record.is_entry = False
-                    # flash(f"Left", "error")
-                else:
-                    record.is_entry = True
-                    # flash("Entered", "error")
+                if entry_student:
+                    entry_student.is_in = not entry_student.is_in
+                    entry_student.last_scanned = datetime.now()
+                    record = EntryLog(
+                        registration_number=reg_number,
+                        time=datetime.now(),
+                        is_entry=entry_student.is_in,
+                    )
+                    db.session.add(record)
 
-                student.last_scanned = datetime.now()
-                db.session.add(record)
                 db.session.commit()
+                log = get_log(reg_number, "entry")
 
-                log = get_log(reg_number, table)
+                if entry_student and entry_student.is_in:
+                    if sticker_just_added:
+                        flash("Sticker issued & Entered", "success")
+                    else:
+                        flash("Entered", "success")
+                else:
+                    flash("Left", "error")
+        else:
+            table_obj = table_map.get(table) if table else None
 
-    count_response = get_count(table=table)
+            if not table_obj:
+                flash("Invalid category selected", "error")
+            else:
+                student = table_obj.query.filter_by(registration_number=reg_number).first()
 
-    if count_response["error"]:
-        print("count error:", count_response["error"])
+                if not student:
+                    flash("Not registered", "error")
+                else:
+                    if table in ["sadhya", "sticker", "chendamelam"]:
+                        if student.is_in:
+                            entry_time_str = f" at {student.entry_time.strftime('%H:%M:%S')}" if student.entry_time else ""
+                            flash(
+                                f"Already scanned{entry_time_str}",
+                                "error",
+                            )
+                        else:
+                            student.is_in = True
+                            student.entry_time = datetime.now()
+                            db.session.commit()
+                            flash("Successfully scanned.", "success")
+                    else:
+                        student.is_in = not student.is_in
+                        log_cls = log_map.get(table, EntryLog)
+                        record = log_cls(
+                            registration_number=reg_number, time=datetime.now()
+                        )
+
+                        if not student.is_in:
+                            record.is_entry = False
+                        else:
+                            record.is_entry = True
+
+                        student.last_scanned = datetime.now()
+                        db.session.add(record)
+                        db.session.commit()
+
+                        log = get_log(reg_number, table)
+
+    count_response = get_count(table=table) if table else {"error": "no table provided"}
+
+    if count_response.get("error"):
         in_count = ""
         out_count = ""
+        sticker_count = ""
     else:
-        in_count = count_response["in_count"]
-        out_count = count_response["out_count"]
+        in_count = count_response.get("in_count", "")
+        out_count = count_response.get("out_count", "")
+        sticker_count = count_response.get("sticker_count", "")
 
+    db.session.expunge_all()
     for i, r in enumerate(log):
-        log[i].time = r.time.strftime("%H:%M:%S")
+        if r.time and hasattr(r.time, "strftime"):
+            log[i].time = r.time.strftime("%H:%M:%S")
 
     return render_template(
         "index.html",
-        tables=table_map.keys(),
+        tables=FRONTEND_TABLES,
         table=table,
         in_count=in_count,
         out_count=out_count,
+        sticker_count=sticker_count,
         log=log[::-1],
         reg_no=reg_number,
     )
@@ -322,36 +393,43 @@ def verify():
         return redirect(url_for("login"))
 
     log = []
-    table = request.args.get("table", None)
+    table = normalize_table_name(request.args.get("table", None))
     reg_number = ""
 
     if request.method == "POST":
         reg_number = request.form["registration_number"].strip().upper()
-        table_obj = table_map[table]
-        student = table_obj.query.filter_by(registration_number=reg_number).first()
+        table_obj = table_map.get(table) if table else None
 
-        if not student:
-            flash("Not registered", "error")
+        if not table_obj:
+            flash("Invalid category selected", "error")
         else:
-            flash("Registered", "success")
+            student = table_obj.query.filter_by(registration_number=reg_number).first()
 
-            if table in ["sadhya", "sticker", "chendamelam"]:
-                if student.is_in:
-                    flash(
-                        f'Already scanned at {student.entry_time.strftime("%H:%M:%S")}',
-                        "error",
-                    )
-                else:
-                    flash("Not scanned yet.", "success")
+            if not student:
+                flash("Not registered", "error")
             else:
-                log = get_log(reg_number, table)
+                flash("Registered", "success")
 
+                if table in ["sadhya", "sticker", "chendamelam"]:
+                    if student.is_in:
+                        entry_time_str = f" at {student.entry_time.strftime('%H:%M:%S')}" if student.entry_time else ""
+                        flash(
+                            f"Already scanned{entry_time_str}",
+                            "error",
+                        )
+                    else:
+                        flash("Not scanned yet.", "success")
+                else:
+                    log = get_log(reg_number, table)
+
+    db.session.expunge_all()
     for i, r in enumerate(log):
-        log[i].time = r.time.strftime("%H:%M:%S")
+        if r.time and hasattr(r.time, "strftime"):
+            log[i].time = r.time.strftime("%H:%M:%S")
 
     return render_template(
         "verify.html",
-        tables=table_map.keys(),
+        tables=FRONTEND_TABLES,
         table=table,
         log=log[::-1],
         reg_no=reg_number,
@@ -361,46 +439,72 @@ def verify():
 @app.route("/edit", methods=["GET", "POST"])
 def edit():
     if "admin" not in session:
+        flash("Admin access required", "error")
         return redirect(url_for("index"))
 
     success_responses, failure_responses = [], []
     reg_no = ""
     if request.method == "POST":
-        reg_no = request.form["registration_number"].upper()
+        reg_no = request.form["registration_number"].strip().upper()
+        action = request.form.get("action", "add")
 
         modify_record = ModifyLog(
             registration_number=reg_no,
-            action=request.form["action"],
+            action=action,
             when_modified=datetime.now(),
         )
 
-        for key in request.form.keys():
-            if table_obj := table_map.get(key, None):
-                if request.form["action"] == "remove":
-                    record = table_obj.query.filter_by(registration_number=reg_no)
-                    if record.count() > 0:
-                        record.delete()
+        form_keys = request.form.keys()
+        targets = []
+        if "sticker_entry" in form_keys or "sticker & entry" in form_keys:
+            targets.append(("sticker", Sticker))
+            targets.append(("entry", Entry))
+        if "sadhya" in form_keys:
+            targets.append(("sadhya", Sadhya))
+        if "concert" in form_keys:
+            targets.append(("concert", Concert))
+        if "chendamelam" in form_keys:
+            targets.append(("chendamelam", Chendamelam))
 
-                        setattr(modify_record, key, True)
+        st_en_succ = False
+        st_en_fail = False
 
-                        success_responses += [
-                            f"Successfully removed from '{key.capitalize()}'"
-                        ]
+        for name, table_obj in targets:
+            record = table_obj.query.filter_by(registration_number=reg_no)
+            if action == "remove":
+                if record.count() > 0:
+                    record.delete()
+                    setattr(modify_record, name, True)
+                    if name in ["sticker", "entry"]:
+                        st_en_succ = True
                     else:
-                        failure_responses += [f"Was not in '{key.capitalize()}'"]
+                        success_responses.append(f"Successfully removed from '{name.capitalize()}'")
                 else:
-                    record = table_obj.query.filter_by(registration_number=reg_no)
-                    if record.count() == 0:
-                        new_record = table_obj(registration_number=reg_no)
-                        db.session.add(new_record)
-
-                        setattr(modify_record, key, True)
-
-                        success_responses += [
-                            f"Successfully added to '{key.capitalize()}'"
-                        ]
+                    if name in ["sticker", "entry"]:
+                        st_en_fail = True
                     else:
-                        failure_responses += [f"Already in '{key.capitalize()}'"]
+                        failure_responses.append(f"Was not in '{name.capitalize()}'")
+            else:
+                if record.count() == 0:
+                    new_record = table_obj(registration_number=reg_no)
+                    db.session.add(new_record)
+                    setattr(modify_record, name, True)
+                    if name in ["sticker", "entry"]:
+                        st_en_succ = True
+                    else:
+                        success_responses.append(f"Successfully added to '{name.capitalize()}'")
+                else:
+                    if name in ["sticker", "entry"]:
+                        st_en_fail = True
+                    else:
+                        failure_responses.append(f"Already in '{name.capitalize()}'")
+
+        if st_en_succ:
+            act_text = "removed from" if action == "remove" else "added to"
+            success_responses.append(f"Successfully {act_text} 'Sticker & Entry'")
+        elif st_en_fail:
+            act_text = "Was not in" if action == "remove" else "Already in"
+            failure_responses.append(f"{act_text} 'Sticker & Entry'")
 
         if any(
             (
@@ -428,8 +532,9 @@ def edit():
 @app.route("/modifications", methods=["GET", "POST"])
 @app.route("/modification", methods=["GET", "POST"])
 def modifications():
-    if "logged_in" not in session:
-        return redirect(url_for("login"))
+    if "admin" not in session:
+        flash("Admin access required", "error")
+        return redirect(url_for("index"))
 
     log = db.session.query(ModifyLog).all()
 

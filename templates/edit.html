@@ -39,11 +39,10 @@
         <div>
           <a href='{{ url_for("edit") }}' class="section_button">Edit</a>
         </div>
-        
+        <div>
+          <a href='{{ url_for("modifications") }}' class="section_button">Modifications</a>
+        </div>
       {% endif %}
-      <div>
-        <a href='{{ url_for("modifications") }}' class="section_button">Modifications</a>
-      </div>
       <div>
         <a href='{{ url_for("logout") }}' class="logout">Logout</a>
       </div>
@@ -66,16 +65,8 @@
              autofocus />
       <div class="chec_group">
         <div>
-          <input type="checkbox" id="chendamelam" name="chendamelam" value="chendamelam" checked />
-          <label for="chendamelam">Chendamelam</label>
-        </div>
-        <div>
-          <input type="checkbox" id="sticker" name="sticker" value="sticker" checked />
-          <label for="sticker">Sticker</label>
-        </div>
-        <div>
-          <input type="checkbox" id="entry" name="entry" value="entry" checked />
-          <label for="entry">Entry</label>
+          <input type="checkbox" id="sticker_entry" name="sticker_entry" value="sticker_entry" checked />
+          <label for="sticker_entry">Sticker & Entry</label>
         </div>
         <div>
           <input type="checkbox" id="sadhya" name="sadhya" value="sadhya" />
