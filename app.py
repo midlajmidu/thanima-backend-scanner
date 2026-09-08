@@ -128,7 +128,7 @@ class ModifyLog(db.Model):
     when_modified = db.Column(db.DateTime, nullable=True, primary_key=True)
 
 
-FRONTEND_TABLES = ["sticker & entry", "sadhya", "concert"]
+FRONTEND_TABLES = ["sticker & entry", "sadhya", "informal"]
 
 table_map = {
     "sticker & entry": Entry,
@@ -137,8 +137,14 @@ table_map = {
     "entry": Entry,
     "sadhya": Sadhya,
     "concert": Concert,
+    "informal": Concert,
 }
-log_map = {"sticker & entry": EntryLog, "entry": EntryLog, "concert": ConcertLog}
+log_map = {
+    "sticker & entry": EntryLog,
+    "entry": EntryLog,
+    "concert": ConcertLog,
+    "informal": ConcertLog,
+}
 
 
 def get_total_counts():
@@ -148,6 +154,7 @@ def get_total_counts():
             "entry": db.session.query(Entry).count(),
             "sadhya": db.session.query(Sadhya).count(),
             "concert": db.session.query(Concert).count(),
+            "informal": db.session.query(Concert).count(),
             "chendamelam": db.session.query(Chendamelam).count(),
         }
     except Exception:
@@ -157,6 +164,7 @@ def get_total_counts():
             "entry": db.session.query(Entry).count(),
             "sadhya": db.session.query(Sadhya).count(),
             "concert": db.session.query(Concert).count(),
+            "informal": db.session.query(Concert).count(),
             "chendamelam": db.session.query(Chendamelam).count(),
         }
 
@@ -497,8 +505,8 @@ def edit():
             targets.append(("entry", Entry))
         if "sadhya" in form_keys:
             targets.append(("sadhya", Sadhya))
-        if "concert" in form_keys:
-            targets.append(("concert", Concert))
+        if "concert" in form_keys or "informal" in form_keys:
+            targets.append(("informal", Concert))
         if "chendamelam" in form_keys:
             targets.append(("chendamelam", Chendamelam))
 
