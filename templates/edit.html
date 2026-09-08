@@ -1,126 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Thanima Scanner - Edit</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/x-icon">
-    <link rel="icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/png">
-    <link rel="stylesheet"
-          type="text/css"
-          href="{{ url_for('static', filename='style.css') }}">
-  </head>
-  <body>
-    <div class="sideBars"></div>
-    <div id="loading">
-      <img class="preloader-img preloader-theyyam" src="{{ url_for('static', filename='images/theyyam face.png') }}" alt="Theyyam">
-      <img class="preloader-img preloader-kathakali" src="{{ url_for('static', filename='images/Kathakali face.png') }}" alt="Kathakali">
-      <div class="loader-flex">
-        <div class="thanima-loader" id="loader">
-          <img src="{{ url_for('static', filename='images/_350F17__4_-removebg-preview.png') }}" alt="Thanima Logo" class="thanima-logo">
-          <div class="loading-overlay"></div>
-        </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanima Scanner - Edit</title>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/x-icon">
+  <link rel="icon" href="{{ url_for('static', filename='images/logoOnly.png') }}" type="image/png">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <div class="sideBars"></div>
+  <div id="loading">
+    <img class="preloader-img preloader-theyyam" src="{{ url_for('static', filename='images/theyyam face.png') }}"
+      alt="Theyyam">
+    <img class="preloader-img preloader-kathakali" src="{{ url_for('static', filename='images/Kathakali face.png') }}"
+      alt="Kathakali">
+    <div class="loader-flex">
+      <div class="thanima-loader" id="loader">
+        <img src="{{ url_for('static', filename='images/_350F17__4_-removebg-preview.png') }}" alt="Thanima Logo"
+          class="thanima-logo">
+        <div class="loading-overlay"></div>
       </div>
     </div>
-    <div class="header">
-      <div class="logo_div">
-        <img class="thanima_logo"
-             src="{{ url_for('static', filename='images/logoOnly.png') }}"
-             alt="">
-        {% if session["admin"] %}<div class="admin">Admin</div>{% endif %}
-      </div>
-      <div>
-        <a href='{{ url_for("index") }}' class="section_button">Home</a>
-      </div>
-      <div>
-        <a href='{{ url_for("verify") }}' class="section_button">Verify</a>
-      </div>
-      {% if session["admin"] %}
-        <div>
-          <a href='{{ url_for("edit") }}' class="section_button">Edit</a>
-        </div>
-        <div>
-          <a href='{{ url_for("modifications") }}' class="section_button">Modifications</a>
-        </div>
-      {% endif %}
-      <div>
-        <a href='{{ url_for("logout") }}' class="logout">Logout</a>
-      </div>
+  </div>
+  <div class="header">
+    <div class="logo_div">
+      <img class="thanima_logo" src="{{ url_for('static', filename='images/logoOnly.png') }}" alt="">
+      {% if session["admin"] %}<div class="admin">Admin</div>{% endif %}
     </div>
-    <h3>THANIMA - 2026</h3>
-    <h1>Add / Remove Participant</h1>
-    <form method="post" id="verify" action="/edit">
-      <div class="check_group">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        <input type="radio" id="add" name="action" value="add" checked>
-        <label for="add">Add</label>
-        <input type="radio" id="remove" name="action" value="remove">
-        <label for="remove">Remove</label>
-      </div>
-      <input class="regInput"
-             type="text"
-             name="registration_number"
-             placeholder="Registration No."
-             required
-             autofocus />
-      <div class="chec_group">
-        <div>
-          <input type="checkbox" id="sticker_entry" name="sticker_entry" value="sticker_entry" checked />
-          <label for="sticker_entry">Sticker & Entry</label>
-        </div>
-        <div>
-          <input type="checkbox" id="sadhya" name="sadhya" value="sadhya" />
-          <label for="sadhya">Sadhya</label>
-        </div>
-        <div>
-          <input type="checkbox" id="informal" name="informal" value="informal" checked />
-          <label for="informal">Informal</label>
-        </div>
-      </div>
-      <input class="verifyBtn" id="submitBtn" type="submit" value="Add" />
-    </form>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        setTimeout(function () {
-          var l = document.getElementById('loading');
-          if (l) l.classList.add('preloader-in');
-        }, 100);
-      });
-
-      window.addEventListener("load", function () {
-        setTimeout(function () {
-          const loading = document.getElementById("loading");
-          if (loading) {
-            loading.classList.add("preloader-out");
-            loading.style.opacity = "0";
-            loading.style.transition = "opacity 0.7s ease-out";
-            setTimeout(function () {
-              loading.style.display = "none";
-            }, 700);
-          }
-        }, 400);
-      });
-
-      const radios = document.querySelectorAll('input[name="action"]');
-      const submitBtn = document.getElementById('submitBtn');
-
-      radios.forEach(radio => {
-        radio.addEventListener('change', () => {
-          submitBtn.value = radio.value.charAt(0).toUpperCase() + radio.value.slice(1);
-        });
-      });
-    </script>
-    <div class="flash-container">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
-        {% endif %}
-      {% endwith %}
+    <div>
+      <a href='{{ url_for("index") }}' class="section_button">Home</a>
     </div>
-    {% if reg_no %}
-      <div class="reg_no">{{ reg_no }}</div>
-      {% for response in success_responses %}<div class="success_response">{{ response }}</div>{% endfor %}
-      {% for response in failure_responses %}<div class="failure_response">{{ response }}</div>{% endfor %}
+    <div>
+      <a href='{{ url_for("verify") }}' class="section_button">Verify</a>
+    </div>
+    {% if session["admin"] %}
+    <div>
+      <a href='{{ url_for("edit") }}' class="section_button">Edit</a>
+    </div>
+    <div>
+      <a href='{{ url_for("modifications") }}' class="section_button">Modifications</a>
+    </div>
     {% endif %}
-  </body>
+    <div>
+      <a href='{{ url_for("logout") }}' class="logout">Logout</a>
+    </div>
+  </div>
+  <h3>THANIMA - 2026</h3>
+  <h1>Add / Remove Participant</h1>
+  <form method="post" id="verify" action="/edit">
+    <div class="check_group">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <input type="radio" id="add" name="action" value="add" checked>
+      <label for="add">Add</label>
+      <input type="radio" id="remove" name="action" value="remove">
+      <label for="remove">Remove</label>
+    </div>
+    <input class="regInput" type="text" name="registration_number" placeholder="Registration No." required autofocus />
+    <div class="chec_group">
+      <div>
+        <input type="checkbox" id="sticker_entry" name="sticker_entry" value="sticker_entry" checked />
+        <label for="sticker_entry">Sticker & Entry</label>
+      </div>
+      <div>
+        <input type="checkbox" id="sadhya" name="sadhya" value="sadhya" />
+        <label for="sadhya">Sadhya</label>
+      </div>
+      <div>
+        <input type="checkbox" id="concert" name="concert" value="concert" checked />
+        <label for="concert">Concert</label>
+      </div>
+    </div>
+    <input class="verifyBtn" id="submitBtn" type="submit" value="Add" />
+  </form>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      setTimeout(function () {
+        var l = document.getElementById('loading');
+        if (l) l.classList.add('preloader-in');
+      }, 100);
+    });
+
+    window.addEventListener("load", function () {
+      setTimeout(function () {
+        const loading = document.getElementById("loading");
+        if (loading) {
+          loading.classList.add("preloader-out");
+          loading.style.opacity = "0";
+          loading.style.transition = "opacity 0.7s ease-out";
+          setTimeout(function () {
+            loading.style.display = "none";
+          }, 700);
+        }
+      }, 400);
+    });
+
+    const radios = document.querySelectorAll('input[name="action"]');
+    const submitBtn = document.getElementById('submitBtn');
+
+    radios.forEach(radio => {
+      radio.addEventListener('change', () => {
+        submitBtn.value = radio.value.charAt(0).toUpperCase() + radio.value.slice(1);
+      });
+    });
+  </script>
+  <div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+    {% endif %}
+    {% endwith %}
+  </div>
+  {% if reg_no %}
+  <div class="reg_no">{{ reg_no }}</div>
+  {% for response in success_responses %}<div class="success_response">{{ response }}</div>{% endfor %}
+  {% for response in failure_responses %}<div class="failure_response">{{ response }}</div>{% endfor %}
+  {% endif %}
+</body>
+
 </html>

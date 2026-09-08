@@ -128,7 +128,7 @@ class ModifyLog(db.Model):
     when_modified = db.Column(db.DateTime, nullable=True, primary_key=True)
 
 
-FRONTEND_TABLES = ["sticker & entry", "sadhya", "informal"]
+FRONTEND_TABLES = ["sticker & entry", "sadhya", "concert"]
 
 table_map = {
     "sticker & entry": Entry,
@@ -137,14 +137,8 @@ table_map = {
     "entry": Entry,
     "sadhya": Sadhya,
     "concert": Concert,
-    "informal": Concert,
 }
-log_map = {
-    "sticker & entry": EntryLog,
-    "entry": EntryLog,
-    "concert": ConcertLog,
-    "informal": ConcertLog,
-}
+log_map = {"sticker & entry": EntryLog, "entry": EntryLog, "concert": ConcertLog}
 
 
 def get_total_counts():
@@ -154,7 +148,6 @@ def get_total_counts():
             "entry": db.session.query(Entry).count(),
             "sadhya": db.session.query(Sadhya).count(),
             "concert": db.session.query(Concert).count(),
-            "informal": db.session.query(Concert).count(),
             "chendamelam": db.session.query(Chendamelam).count(),
         }
     except Exception:
@@ -164,7 +157,6 @@ def get_total_counts():
             "entry": db.session.query(Entry).count(),
             "sadhya": db.session.query(Sadhya).count(),
             "concert": db.session.query(Concert).count(),
-            "informal": db.session.query(Concert).count(),
             "chendamelam": db.session.query(Chendamelam).count(),
         }
 
@@ -406,64 +398,28 @@ def verify():
 
     if request.method == "POST":
         reg_number = request.form["registration_number"].strip().upper()
+        table_obj = table_map.get(table) if table else None
 
-        if table == "sticker & entry":
-            entry_student = Entry.query.filter_by(registration_number=reg_number).first()
-            sticker_student = Sticker.query.filter_by(registration_number=reg_number).first()
+        if not table_obj:
+            flash("Invalid category selected", "error")
+        else:
+            student = table_obj.query.filter_by(registration_number=reg_number).first()
 
-            if not entry_student and not sticker_student:
+            if not student:
                 flash("Not registered", "error")
             else:
                 flash("Registered", "success")
 
-                scanned_time = None
-                if entry_student and entry_student.last_scanned:
-                    scanned_time = entry_student.last_scanned
-                elif sticker_student and sticker_student.entry_time:
-                    scanned_time = sticker_student.entry_time
-
-                is_scanned = (
-                    (entry_student and (entry_student.is_in or entry_student.last_scanned is not None))
-                    or (sticker_student and sticker_student.is_in)
-                )
-
-                if is_scanned:
-                    time_str = (
-                        f" at {scanned_time.strftime('%H:%M:%S')}"
-                        if (scanned_time and hasattr(scanned_time, "strftime"))
-                        else ""
-                    )
-                    flash(f"Already scanned{time_str}", "error")
-                else:
-                    flash("Not scanned yet.", "success")
-
-                log = get_log(reg_number, "entry")
-        else:
-            table_obj = table_map.get(table) if table else None
-
-            if not table_obj:
-                flash("Invalid category selected", "error")
-            else:
-                student = table_obj.query.filter_by(registration_number=reg_number).first()
-
-                if not student:
-                    flash("Not registered", "error")
-                else:
-                    flash("Registered", "success")
-
-                    scanned_time = getattr(student, "entry_time", None) or getattr(student, "last_scanned", None)
-                    is_scanned = bool(student.is_in or (scanned_time is not None))
-
-                    if is_scanned:
-                        time_str = (
-                            f" at {scanned_time.strftime('%H:%M:%S')}"
-                            if (scanned_time and hasattr(scanned_time, "strftime"))
-                            else ""
+                if table in ["sadhya", "sticker", "chendamelam"]:
+                    if student.is_in:
+                        entry_time_str = f" at {student.entry_time.strftime('%H:%M:%S')}" if student.entry_time else ""
+                        flash(
+                            f"Already scanned{entry_time_str}",
+                            "error",
                         )
-                        flash(f"Already scanned{time_str}", "error")
                     else:
                         flash("Not scanned yet.", "success")
-
+                else:
                     log = get_log(reg_number, table)
 
     db.session.expunge_all()
@@ -505,8 +461,8 @@ def edit():
             targets.append(("entry", Entry))
         if "sadhya" in form_keys:
             targets.append(("sadhya", Sadhya))
-        if "concert" in form_keys or "informal" in form_keys:
-            targets.append(("informal", Concert))
+        if "concert" in form_keys:
+            targets.append(("concert", Concert))
         if "chendamelam" in form_keys:
             targets.append(("chendamelam", Chendamelam))
 
