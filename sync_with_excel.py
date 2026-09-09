@@ -35,7 +35,7 @@ def sync_db_with_excel(excel_path=None, db_path="thanima.db"):
         print(f"Database file not found: {db_path}")
         return
 
-    target_header = "Registration No."
+    target_headers = ["Registration No.", "Reference No.", "Registration No", "Reference No", "Reg No"]
     valid_regs = set()
 
     print(f"Reading registration numbers from '{excel_path}'...")
@@ -43,14 +43,23 @@ def sync_db_with_excel(excel_path=None, db_path="thanima.db"):
         with open(excel_path, "r", encoding="utf-8", errors="ignore") as f:
             reader = csv.reader(f)
             try:
-                headers = next(reader)
+                headers = [h.strip() for h in next(reader)]
             except StopIteration:
                 print("Error: File is empty.")
                 return
-            if target_header not in headers:
-                print(f"Error: Header '{target_header}' not found in CSV. Available headers: {headers}")
+
+            target_header = None
+            for h in target_headers:
+                if h in headers:
+                    target_header = h
+                    break
+
+            if not target_header:
+                print(f"Error: Neither 'Registration No.' nor 'Reference No.' found in CSV headers: {headers}")
                 return
+
             header_idx = headers.index(target_header)
+            print(f"Using header column: '{target_header}' (column #{header_idx + 1})")
             for row in reader:
                 if len(row) > header_idx:
                     reg = str(row[header_idx]).strip().upper()
@@ -59,9 +68,17 @@ def sync_db_with_excel(excel_path=None, db_path="thanima.db"):
     else:
         import pandas as pd
         df = pd.read_excel(excel_path)
-        if target_header not in df.columns:
-            print(f"Error: Header '{target_header}' not found in file. Available columns: {list(df.columns)}")
+        target_header = None
+        for h in target_headers:
+            if h in df.columns:
+                target_header = h
+                break
+
+        if not target_header:
+            print(f"Error: Neither 'Registration No.' nor 'Reference No.' found in Excel columns: {list(df.columns)}")
             return
+
+        print(f"Using header column: '{target_header}'")
         valid_regs = set(df[target_header].dropna().astype(str).str.strip().str.upper())
 
     print(f"Found {len(valid_regs)} valid student registration IDs in '{excel_path}'.")
