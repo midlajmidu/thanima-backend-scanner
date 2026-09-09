@@ -1,14 +1,14 @@
 import os
 import sys
 import sqlite3
-from app import app, db, get_config_val, BASE_DIR
-from sqlalchemy.ext.serializer import loads
 
 def restore_table_file(filepath):
     if not os.path.exists(filepath):
         print(f"File not found: {filepath}")
         return 0
     try:
+        from app import app, db
+        from sqlalchemy.ext.serializer import loads
         with open(filepath, "rb") as f:
             data = f.read()
         with app.app_context():
@@ -24,12 +24,15 @@ def restore_table_file(filepath):
         print(f"Error restoring table file '{filepath}': {e}")
         return 0
 
-def restore_db_file(source_db_path):
-    target_db_name = get_config_val("db_url", "sqlite:///thanima.db").replace("sqlite:///", "")
-    if not os.path.isabs(target_db_name):
-        target_db_path = os.path.join(BASE_DIR, target_db_name)
-    else:
-        target_db_path = target_db_name
+def restore_db_file(source_db_path, target_db_path=None):
+    if not target_db_path:
+        # Check standard db names in directory
+        for candidate in ["thanima.db", "registration.db"]:
+            if os.path.exists(candidate):
+                target_db_path = candidate
+                break
+        if not target_db_path:
+            target_db_path = "thanima.db"
 
     if not os.path.exists(source_db_path):
         print(f"Source DB file not found: {source_db_path}")
@@ -62,12 +65,12 @@ def restore_db_file(source_db_path):
                 total_merged += len(rows)
                 print(f"  -> Table '{t}': processed {len(rows)} records.")
             except Exception as e:
-                print(f"  -> Table '{t}' merge skipped/error: {e}")
+                print(f"  -> Table '{t}' merge error: {e}")
 
         t_conn.commit()
         s_conn.close()
         t_conn.close()
-        print(f"Done! Merged {total_merged} rows into '{target_db_path}'.")
+        print(f"Done! Merged {total_merged} total rows from '{source_db_path}' into '{target_db_path}'.")
         return total_merged
     except Exception as e:
         print(f"Error merging DB file '{source_db_path}': {e}")
