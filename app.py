@@ -564,6 +564,28 @@ def edit():
             db.session.add(modify_record)
         db.session.commit()
 
+    student_status = {}
+    log = []
+    if reg_no:
+        st = Sticker.query.filter_by(registration_number=reg_no).first()
+        en = Entry.query.filter_by(registration_number=reg_no).first()
+        sd = Sadhya.query.filter_by(registration_number=reg_no).first()
+        co = Concert.query.filter_by(registration_number=reg_no).first()
+        ch = Chendamelam.query.filter_by(registration_number=reg_no).first()
+
+        student_status = {
+            "sticker": "Issued" if (st and st.is_in) else ("Registered" if st else "Not Registered"),
+            "entry": ("IN" if en.is_in else "OUT") if en else "Not Registered",
+            "sadhya": ("Scanned" if sd and sd.is_in else "Not Scanned (0 Used)") if sd else "Not Registered",
+            "informal": ("Scanned" if co and co.is_in else "Not Scanned") if co else "Not Registered",
+            "chendamelam": ("Scanned" if ch and ch.is_in else "Not Scanned") if ch else "Not Registered",
+        }
+        log = get_log(reg_no, "entry")
+        db.session.expunge_all()
+        for i, r in enumerate(log):
+            if r.time and hasattr(r.time, "strftime"):
+                log[i].time = r.time.strftime("%H:%M:%S")
+
     global TOTAL_COUNTS
     TOTAL_COUNTS = get_total_counts()
 
@@ -572,7 +594,10 @@ def edit():
         reg_no=reg_no,
         success_responses=success_responses,
         failure_responses=failure_responses,
+        student_status=student_status,
+        log=log[::-1],
     )
+
 
 
 @app.route("/modifications", methods=["GET", "POST"])

@@ -117,6 +117,28 @@
   <div class="reg_no">{{ reg_no }}</div>
   {% for response in success_responses %}<div class="success_response">{{ response }}</div>{% endfor %}
   {% for response in failure_responses %}<div class="failure_response">{{ response }}</div>{% endfor %}
+
+  {% if student_status %}
+  <div class="student_details" style="margin: 15px auto; max-width: 420px; background: rgba(0,0,0,0.25); padding: 12px 16px; border-radius: 8px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.15); text-align: left;">
+    <div style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; color: #ffd700;">
+      Current Status: {{ reg_no }}
+    </div>
+    <div><strong>Sticker:</strong> {{ student_status.sticker }}</div>
+    <div><strong>Entry Status:</strong> {{ student_status.entry }}</div>
+    <div><strong>Sadhya:</strong> {{ student_status.sadhya }}</div>
+    <div><strong>Informal:</strong> {{ student_status.informal }}</div>
+    <div><strong>Chendamelam:</strong> {{ student_status.chendamelam }}</div>
+  </div>
+  {% endif %}
+
+  <div id="log">
+    {% for record in log %}
+      <div class="{{ 'entry_record' if record.is_entry else 'exit_record' }}">
+        <span class="record_status">{{ 'Entered' if record.is_entry else 'Left' }}</span>
+        <span class="record_time">{{ record.time }}</span>
+      </div>
+    {% endfor %}
+  </div>
   {% endif %}
 </body>
 

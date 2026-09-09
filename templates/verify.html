@@ -81,6 +81,14 @@
       {% endwith %}
     </div>
     <div class="reg_no">{{ reg_no }}</div>
+    <div id="log">
+      {% for record in log %}
+        <div class="{{ 'entry_record' if record.is_entry else 'exit_record' }}">
+          <span class="record_status">{{ 'Entered' if record.is_entry else 'Left' }}</span>
+          <span class="record_time">{{ record.time }}</span>
+        </div>
+      {% endfor %}
+    </div>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         if (window.location.search.includes('table=')) return;
