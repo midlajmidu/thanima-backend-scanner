@@ -1,19 +1,34 @@
 import sqlite3
 import os
 import sys
+import glob
 
-def find_excel_file():
-    candidates = [f for f in os.listdir(".") if f.endswith(".xlsx") or f.endswith(".xls") or f.endswith(".csv")]
-    if candidates:
-        return candidates[0]
+def find_latest_excel_file():
+    search_dirs = [".", "/home/adminuser", "/tmp"]
+    files = []
+    for d in search_dirs:
+        if os.path.exists(d):
+            try:
+                for ext in ["*.xlsx", "*.xls", "*.csv"]:
+                    for f in glob.glob(os.path.join(d, ext)):
+                        # Ignore venv / site-packages test data files
+                        if "site-packages" not in f and "random" not in f and "numpy" not in f:
+                            files.append(f)
+            except Exception:
+                pass
+    if files:
+        files.sort(key=lambda x: os.path.getmtime(x))
+        latest = files[-1]
+        print(f"Auto-detected latest uploaded file: '{latest}' (Modified: {os.path.getmtime(latest)})")
+        return latest
     return None
 
 def sync_db_with_excel(excel_path=None, db_path="thanima.db"):
     if not excel_path or not os.path.exists(excel_path):
-        excel_path = find_excel_file()
+        excel_path = find_latest_excel_file()
 
     if not excel_path or not os.path.exists(excel_path):
-        print("Error: No Excel (.xlsx/.csv) registration file found in directory.")
+        print("Error: No registration (.xlsx/.csv) file found.")
         return
 
     if not os.path.exists(db_path):
@@ -21,7 +36,7 @@ def sync_db_with_excel(excel_path=None, db_path="thanima.db"):
         return
 
     import pandas as pd
-    print(f"Reading valid registration numbers from '{excel_path}'...")
+    print(f"Reading valid registration numbers from latest uploaded file '{excel_path}'...")
     if excel_path.endswith(".csv"):
         df = pd.read_csv(excel_path)
     else:
@@ -58,7 +73,7 @@ def sync_db_with_excel(excel_path=None, db_path="thanima.db"):
 
     conn.commit()
     conn.close()
-    print("\nSuccessfully synced database with official Excel list!")
+    print("\nSuccessfully synced database with the latest uploaded file!")
 
 if __name__ == "__main__":
     excel_file = sys.argv[1] if len(sys.argv) > 1 else None
