@@ -247,24 +247,21 @@ def get_count(table):
 
     if table == "sticker & entry":
         entry_in = db.session.query(Entry).filter(Entry.is_in == True).count()
-        entry_out = db.session.query(Entry).filter(Entry.last_scanned.isnot(None), Entry.is_in == False).count()
+        entry_total = db.session.query(Entry).count()
         sticker_count = db.session.query(Sticker).filter(Sticker.is_in == True).count()
         return {
             "in_count": entry_in,
-            "out_count": entry_out,
+            "out_count": max(0, entry_total - entry_in),
             "sticker_count": sticker_count,
             "error": "",
         }
 
     table_obj = table_map[table]
     in_count = db.session.query(table_obj).filter(table_obj.is_in == True).count()
-    if hasattr(table_obj, "last_scanned"):
-        out_count = db.session.query(table_obj).filter(table_obj.last_scanned.isnot(None), table_obj.is_in == False).count()
-    else:
-        out_count = db.session.query(table_obj).filter(table_obj.is_in == False).count()
+    total_count = db.session.query(table_obj).count()
     return {
         "in_count": in_count,
-        "out_count": out_count,
+        "out_count": max(0, total_count - in_count),
         "error": "",
     }
 
